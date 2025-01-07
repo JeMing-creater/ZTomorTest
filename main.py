@@ -5,44 +5,73 @@ from src.check import *
 import os, cv2, yaml
 
 
-# TODO: 确定分辨率是否合理，合理返回True, 不合理返回False
+def check(dataPath, checkModels):
+    directory_item = get_directory_item(dataPath)
+
+    # TODO: 0. 判断是否有打不开的nii文件
+    cannot_open = {}
+    # TODO: 1. 确定哪个编号空缺模态，如皆不空缺，返回(True, []), 否则返回(False, [模态名])
+    loss_model = {}
+    # TODO: 2. 确定同编号下，不同模态切片数量是否对齐，如皆对齐返回(True, {}), 如不对齐返回(False, {模态名：切片数量})
+    unalign_model = {}
+    # TODO: 3. 确定所有模态分辨率是否合理，合理返回(True, {}), 不合理返回(False, {模态名：分辨率})
+    unResolution_model = {}
+    # TODO: 4. 统筹能用的数据编号
+    use_model = []
+    if directory_item != []:
+        for item in directory_item:
+            this_data_path = dataPath + '/' + item + '/'
+            all_models = get_directory_item(this_data_path)
+            # TODO: 0
+            check_flag, error_item = check_open_files(this_data_path, checkModels)
+            if check_flag == False:
+                cannot_open[item] = error_item
+                continue
+            # TODO: 1
+            check_flag, loss_item = check_subdirectories_contain_files(this_data_path, all_models, checkModels)
+            if check_flag == False:
+                loss_model[item] = loss_item
+            else:
+                # 如果模态缺失，则无所谓对齐，如果不缺失，则考虑对齐
+                # TODO: 2
+                check_flag, unalign_item = check_slices_consistency(this_data_path, checkModels)
+                if check_flag == False:
+                    unalign_model[item] = unalign_item
+        
+            # 无论模态是否缺失，判断已有模态分辨率是否达标
+            # TODO: 3
+            check_flag, unResolution_item = check_modalities_resolution(this_data_path, checkModels, config.lowestResolution)
+      
+            if check_flag  == False:
+                unResolution_model[item] = unResolution_item
+    else:
+        print('dataPath has not data!')
+      
+    # TODO: 4
+    for item in directory_item:
+        if item not in loss_model.keys() and item not in unalign_model.keys() and item not in unResolution_model.keys():
+            use_model.append(item)
+  
+    return cannot_open, loss_model, unalign_model, unResolution_model, use_model
 
 def main(config):
-  # 检查的模态
-  checkModels = config.checkModels
+    # 检查的模态
+    checkModels = config.checkModels
+    # 写入路径
+    writePath = config.writePath
   
-  # 非手术勾画
-  dataPath = config.dataPath1
-  directory_item = get_directory_item(dataPath)
+    # 非手术勾画
+    dataPath1 = config.dataPath1
+    all_result1 = check(dataPath1, checkModels)
+    write_result(writePath+'/'+'非手术勾画.txt', all_result1)
   
-  # TODO: 确定哪个编号空缺模态，如皆不空缺，返回True, 否则返回空缺模态列表
-  loss_model = {}
-  # TODO: 确定同编号下，不同模态切片数量是否对齐，如皆对齐返回True, 如不对齐返回各个模态切片数量的字典
-  unalign_model = {}
-  # TODO: 确定分辨率是否合理，合理返回True, 不合理返回False
+    # 手术勾画
+    dataPath2 = config.dataPath2
+    all_result2 = check(dataPath2, checkModels)
+    write_result(writePath+'/'+'手术勾画.txt', all_result2)
   
-  if directory_item != []:
-    for item in directory_item:
-      this_data_path = dataPath + '/' + item + '/'
-      all_models = get_directory_item(this_data_path)
-      # TODO: 确定哪个编号空缺模态，如皆不空缺，返回True, 否则返回空缺模态列表
-      check_flag, loss_item = check_subdirectories_contain_files(this_data_path, all_models, checkModels)
-      if check_flag == False:
-        loss_model[item] = loss_item
-      else:
-        # 如果模态缺失，则无所谓对齐，如果不缺失，则考虑对齐
-        # TODO: 确定同编号下，不同模态切片数量是否对齐，如皆对齐返回True, 如不对齐返回各个模态切片数量的字典
-        check_flag, unalign_item = check_slices_consistency(this_data_path, checkModels)
-        if check_flag == False:
-          unalign_model[item] = unalign_item
-  else:
-    print('dataPath has not data!')
-  
-  print(loss_model)
-  print(unalign_model)
-  # 手术勾画
 
 if __name__ == '__main__':
-  config = EasyDict(yaml.load(open('config.yml', 'r', encoding="utf-8"), Loader=yaml.FullLoader))
-  main(config)
+    config = EasyDict(yaml.load(open('config.yml', 'r', encoding="utf-8"), Loader=yaml.FullLoader))
+    main(config)
     

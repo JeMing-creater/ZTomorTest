@@ -2,6 +2,26 @@ import os
 import cv2
 import nibabel as nib
 
+def check_open_files(main_directory, checkModels):
+    error = []
+    for model in checkModels:
+        modality_dir = os.path.join(main_directory, model)
+        if not os.path.isdir(modality_dir):
+            continue
+        
+        nii_files = [f for f in os.listdir(modality_dir) if f.endswith('.nii.gz')]
+        if not nii_files:
+            continue
+        
+        try:
+            nii_file_path = os.path.join(modality_dir, nii_files[0])
+            img = nib.load(nii_file_path)
+        except Exception as e:
+            print(e)
+            error.append(model)
+    return (not error, error)
+             
+
 def check_subdirectories_contain_files(main_directory, subdirectory_names, checkModels):
     
     empty_dirs = []
@@ -68,3 +88,31 @@ def check_slices_consistency(main_directory, checkModels):
             inconsistent_modalities[modality] = slices
     
     return (not bool(inconsistent_modalities), inconsistent_modalities)
+
+def check_modalities_resolution(main_directory, checkModels, lowestResolution):
+    inadequate_resolutions = {}
+
+    for modality in checkModels:
+        modality_dir = os.path.join(main_directory, modality)
+        if not os.path.isdir(modality_dir):
+            continue
+        
+        nii_files = [f for f in os.listdir(modality_dir) if f.endswith('.nii.gz')]
+        if not nii_files:
+            continue
+        
+        # 假设每个模态只有一个 .nii.gz 文件，如果有多个，请根据需要调整逻辑
+        nii_file_path = os.path.join(modality_dir, nii_files[0])
+        
+        try:
+            # 加载.nii.gz文件并获取分辨率
+            img = nib.load(nii_file_path)
+            resolution = img.shape[:3]  # 获取体素大小
+            
+            # 检查前两维分辨率是否都大于200
+            if len(resolution) < 2 or resolution[0] < lowestResolution[0] or resolution[1] < lowestResolution[1]:
+                inadequate_resolutions[modality] = resolution
+        except Exception as e:
+            inadequate_resolutions[modality] = None  # 或者其他适当的默认值
+
+    return (not bool(inadequate_resolutions), inadequate_resolutions)
