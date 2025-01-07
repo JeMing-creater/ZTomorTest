@@ -1,0 +1,5 @@
+dataPath1: C:/Users/Jeming/Desktop/ra/data/梅州胃癌MR 非手术勾画
+dataPath2: C:/Users/Jeming/Desktop/ra/data/梅州胃癌MR 手术勾画
+# checkModels: ['A', 'ADC', 'T2_FS', 'V', 'DWI', 'P']
+checkModels: ['ADC', 'T2_FS', 'V']
+lowestResolution: [200, 200]
