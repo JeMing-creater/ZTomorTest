@@ -36,7 +36,7 @@ def main(config):
         if check_flag == False:
           unalign_model[item] = unalign_item
   else:
-    print('dataPath1 has not data!')
+    print('dataPath has not data!')
   
   print(loss_model)
   print(unalign_model)
