@@ -32,7 +32,7 @@ def write_result(path, result):
         result = ''
         for item in use_model:
             result += item + ', '
-        result_line.append('Useful data: ' + result.rstrip(', ') + '\n')
+        result_line.append('Useful data: \n' + result.rstrip(', ') + '\n')
         result_line.append('\n')
         
         # 2. 无法打开的文件（文件损坏）
