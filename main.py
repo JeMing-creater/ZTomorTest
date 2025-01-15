@@ -16,7 +16,9 @@ def check(dataPath, checkModels):
     unalign_model = {}
     # TODO: 3. 确定所有模态分辨率是否合理，合理返回(True, {}), 不合理返回(False, {模态名：分辨率})
     unResolution_model = {}
-    # TODO: 4. 统筹能用的数据编号
+    # TODO: 4. 确定所有模态的病灶大小是否合理，合理返回(True, {}), 不合理返回(False, {模态名：病灶体素大小})
+    unSize_model = {}
+    # TODO: 5. 统筹能用的数据编号
     use_model = []
     if directory_item != []:
         for item in directory_item:
@@ -41,18 +43,26 @@ def check(dataPath, checkModels):
             # 无论模态是否缺失，判断已有模态分辨率是否达标
             # TODO: 3
             check_flag, unResolution_item = check_modalities_resolution(this_data_path, checkModels, config.lowestResolution)
-      
+            
             if check_flag  == False:
                 unResolution_model[item] = unResolution_item
+            
+            # 无论模态是否缺失，判断已有模态病灶大小是否达标
+            # TODO: 4
+            check_flag, unSize_item = check_label_size(this_data_path, checkModels, config.lowestSize)
+
+            if check_flag  == False:
+                unSize_model[item] = unSize_item
+            
     else:
         print('dataPath has not data!')
       
-    # TODO: 4
+    # TODO: 5
     for item in directory_item:
-        if item not in loss_model.keys() and item not in unalign_model.keys() and item not in unResolution_model.keys():
+        if item not in loss_model.keys() and item not in unalign_model.keys() and item not in unResolution_model.keys() and item not in unSize_model.keys():
             use_model.append(item)
   
-    return cannot_open, loss_model, unalign_model, unResolution_model, use_model
+    return cannot_open, loss_model, unalign_model, unResolution_model, unSize_model, use_model
 
 def main(config):
     # 检查的模态
@@ -63,12 +73,12 @@ def main(config):
     # 非手术勾画
     dataPath1 = config.dataPath1
     all_result1 = check(dataPath1, checkModels)
-    write_result(writePath+'/'+'非手术勾画.txt', all_result1)
+    write_result(config, writePath+'/'+'非手术勾画.txt', all_result1)
   
     # 手术勾画
     dataPath2 = config.dataPath2
     all_result2 = check(dataPath2, checkModels)
-    write_result(writePath+'/'+'手术勾画.txt', all_result2)
+    write_result(config, writePath+'/'+'手术勾画.txt', all_result2)
   
 
 if __name__ == '__main__':

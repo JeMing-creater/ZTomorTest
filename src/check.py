@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 import nibabel as nib
 
 def check_open_files(main_directory, checkModels):
@@ -116,3 +117,31 @@ def check_modalities_resolution(main_directory, checkModels, lowestResolution):
             inadequate_resolutions[modality] = None  # 或者其他适当的默认值
 
     return (not bool(inadequate_resolutions), inadequate_resolutions)
+
+def check_label_size(main_directory, checkModels, lowestSize):
+    inaccaptable_size = {}
+
+    for modality in checkModels:
+        modality_dir = os.path.join(main_directory, modality)
+        if not os.path.isdir(modality_dir):
+            continue
+        
+        nii_files = [f for f in os.listdir(modality_dir) if f.endswith('seg.nii.gz')]
+        if not nii_files:
+            continue
+        
+        # 假设每个模态只有一个 .nii.gz 文件，如果有多个，请根据需要调整逻辑
+        nii_file_path = os.path.join(modality_dir, nii_files[0])
+        
+        try:
+            # 加载.nii.gz文件并获取分辨率
+            img = nib.load(nii_file_path)
+            size = np.count_nonzero(img.get_fdata())  # 获取体素大小
+            
+            # 检查前两维分辨率是否都大于200
+            if size < lowestSize:
+                inaccaptable_size[modality] = size
+        except Exception as e:
+            inaccaptable_size[modality] = None  # 或者其他适当的默认值
+
+    return (not bool(inaccaptable_size), inaccaptable_size)

@@ -16,7 +16,7 @@ def get_directory_item(path):
         print(f"The provided path {path} does not exist.")
         return []
 
-def write_result(path, result):
+def write_result(config, path, result):
     directory = os.path.dirname(path)
     ensure_directory_exists(directory)
     if os.path.exists(path):
@@ -24,7 +24,7 @@ def write_result(path, result):
     with open(path, 'w') as f:
         pass  
     
-    cannot_open, loss_model, unalign_model, unResolution_model, use_model = result
+    cannot_open, loss_model, unalign_model, unResolution_model, unSize_model, use_model = result
     
     result_line = []
     with open(path, 'w') as f:
@@ -69,10 +69,24 @@ def write_result(path, result):
         result_line.append('\n') 
         
         # 4. 写入分辨率不足模态的编号
-        result_line.append('unResolution data: '+ '\n')
+        result_line.append(f'unResolution data ({config.lowestResolution}): '+ '\n')
         for key in unResolution_model.keys():
             result = ''
             data = unResolution_model[key]
+            for key2 in data.keys():
+                result += f'{key2} : {data[key2]}' + ', '
+            result = result.rstrip(', ')
+            result_line.append(f'{key}: {result} \n')    
+        result_line.append('\n') 
+
+        for line in result_line:
+            f.write(line)
+        
+        # 5. 写入病灶过小的编号
+        result_line.append(f'unSize data ({config.lowestSize}): '+ '\n')
+        for key in unSize_model.keys():
+            result = ''
+            data = unSize_model[key]
             for key2 in data.keys():
                 result += f'{key2} : {data[key2]}' + ', '
             result = result.rstrip(', ')
